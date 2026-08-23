@@ -9,3 +9,12 @@ Características principales:
 - Fuerte enfoque en adopción real de usuarios
 
 Es una de las L2 con mayor crecimiento de actividad.
+
+# Primeros pasos
+
+1. Añade Base a tu wallet (Chain ID: 8453)
+2. Consigue ETH en Base
+3. Usa Foundry o Hardhat
+4. Explora BaseScan: https://basescan.org
+
+Documentación oficial: https://docs.base.org
