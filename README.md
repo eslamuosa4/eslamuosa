@@ -144,3 +144,41 @@ contract BalanceTracker {
         return deposits[msg.sender];
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Pausable {
+    address public owner;
+    bool public paused;
+
+    event Paused(address indexed by);
+    event Unpaused(address indexed by);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
+    modifier whenNotPaused() {
+        require(!paused, "Contract is paused");
+        _;
+    }
+
+    function pause() external onlyOwner {
+        paused = true;
+        emit Paused(msg.sender);
+    }
+
+    function unpause() external onlyOwner {
+        paused = false;
+        emit Unpaused(msg.sender);
+    }
+
+    function doSomething() external whenNotPaused {
+        // función de ejemplo
+    }
+}
