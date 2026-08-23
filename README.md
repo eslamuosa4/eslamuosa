@@ -229,3 +229,32 @@ contract CheckIn {
         return (lastCheckIn[user], checkInCount[user]);
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Deadline {
+    uint256 public deadline;
+    address public owner;
+
+    event DeadlineSet(uint256 newDeadline);
+
+    constructor(uint256 durationInSeconds) {
+        owner = msg.sender;
+        deadline = block.timestamp + durationInSeconds;
+    }
+
+    function setDeadline(uint256 durationInSeconds) external {
+        require(msg.sender == owner, "Not owner");
+        deadline = block.timestamp + durationInSeconds;
+        emit DeadlineSet(deadline);
+    }
+
+    function isExpired() external view returns (bool) {
+        return block.timestamp >= deadline;
+    }
+
+    function timeLeft() external view returns (uint256) {
+        if (block.timestamp >= deadline) return 0;
+        return deadline - block.timestamp;
+    }
+}
