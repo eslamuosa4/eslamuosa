@@ -210,3 +210,22 @@ contract Donation {
         require(success, "Withdraw failed");
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract CheckIn {
+    mapping(address => uint256) public lastCheckIn;
+    mapping(address => uint256) public checkInCount;
+
+    event CheckedIn(address indexed user, uint256 timestamp, uint256 totalCheckIns);
+
+    function checkIn() external {
+        lastCheckIn[msg.sender] = block.timestamp;
+        checkInCount[msg.sender] += 1;
+        emit CheckedIn(msg.sender, block.timestamp, checkInCount[msg.sender]);
+    }
+
+    function getCheckInInfo(address user) external view returns (uint256 last, uint256 total) {
+        return (lastCheckIn[user], checkInCount[user]);
+    }
+}
