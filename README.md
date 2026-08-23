@@ -24,3 +24,23 @@ Documentación oficial: https://docs.base.org
 Repositorio dedicado a los builders del Guild de Base.
 
 Base utiliza el OP Stack, por lo que es totalmente compatible con Ethereum. Cualquier contrato de Solidity puede desplegarse aquí con costos mínimos.
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SimpleStorage {
+    uint256 private value;
+    address public lastEditor;
+
+    event ValueChanged(uint256 newValue, address indexed editor);
+
+    function set(uint256 newValue) external {
+        value = newValue;
+        lastEditor = msg.sender;
+        emit ValueChanged(newValue, msg.sender);
+    }
+
+    function get() external view returns (uint256) {
+        return value;
+    }
+}
