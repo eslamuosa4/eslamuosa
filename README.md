@@ -182,3 +182,31 @@ contract Pausable {
         // función de ejemplo
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Donation {
+    address public beneficiary;
+    uint256 public totalDonated;
+    mapping(address => uint256) public donations;
+
+    event Donated(address indexed donor, uint256 amount);
+
+    constructor(address _beneficiary) {
+        beneficiary = _beneficiary;
+    }
+
+    function donate() external payable {
+        require(msg.value > 0, "Must send ETH");
+        donations[msg.sender] += msg.value;
+        totalDonated += msg.value;
+        emit Donated(msg.sender, msg.value);
+    }
+
+    function withdraw() external {
+        require(msg.sender == beneficiary, "Not beneficiary");
+        uint256 amount = address(this).balance;
+        (bool success, ) = beneficiary.call{value: amount}("");
+        require(success, "Withdraw failed");
+    }
+}
