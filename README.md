@@ -90,3 +90,37 @@ contract Whitelist {
         emit Removed(account);
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Faucet {
+    address public owner;
+    uint256 public amountAllowed = 0.01 ether;
+    mapping(address => uint256) public lastRequest;
+
+    event Requested(address indexed user, uint256 amount);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function request() external {
+        require(block.timestamp >= lastRequest[msg.sender] + 1 days, "Wait 24h");
+        require(address(this).balance >= amountAllowed, "Faucet empty");
+
+        lastRequest[msg.sender] = block.timestamp;
+        (bool success, ) = msg.sender.call{value: amountAllowed}("");
+        require(success, "Transfer failed");
+        emit Requested(msg.sender, amountAllowed);
+    }
+
+    function donate() external payable {}
+
+    function withdraw() external {
+        require(msg.sender == owner, "Not owner");
+        (bool success, ) = owner.call{value: address(this).balance}("");
+        require(success, "Withdraw failed");
+    }
+
+    receive() external payable {}
+}
