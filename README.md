@@ -61,3 +61,32 @@ contract NameRegistry {
         return names[user];
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Whitelist {
+    address public owner;
+    mapping(address => bool) public isWhitelisted;
+
+    event Added(address indexed account);
+    event Removed(address indexed account);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
+    function add(address account) external onlyOwner {
+        isWhitelisted[account] = true;
+        emit Added(account);
+    }
+
+    function remove(address account) external onlyOwner {
+        isWhitelisted[account] = false;
+        emit Removed(account);
+    }
+}
