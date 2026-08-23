@@ -258,3 +258,38 @@ contract Deadline {
         return deadline - block.timestamp;
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SimpleLottery {
+    address[] public players;
+    address public winner;
+    bool public finished;
+
+    event PlayerJoined(address indexed player);
+    event WinnerSelected(address indexed winner);
+
+    function join() external payable {
+        require(!finished, "Lottery finished");
+        require(msg.value == 0.001 ether, "Send exactly 0.001 ETH");
+        players.push(msg.sender);
+        emit PlayerJoined(msg.sender);
+    }
+
+    function drawWinner() external {
+        require(!finished, "Already finished");
+        require(players.length > 0, "No players");
+
+        uint256 index = uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, players.length))) % players.length;
+        winner = players[index];
+        finished = true;
+
+        (bool success, ) = winner.call{value: address(this).balance}("");
+        require(success, "Transfer failed");
+        emit WinnerSelected(winner);
+    }
+
+    function getPlayersCount() external view returns (uint256) {
+        return players.length;
+    }
+}
