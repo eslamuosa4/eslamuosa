@@ -18,3 +18,9 @@ Es una de las L2 con mayor crecimiento de actividad.
 4. Explora BaseScan: https://basescan.org
 
 Documentación oficial: https://docs.base.org
+
+# Base Guild Builders
+
+Repositorio dedicado a los builders del Guild de Base.
+
+Base utiliza el OP Stack, por lo que es totalmente compatible con Ethereum. Cualquier contrato de Solidity puede desplegarse aquí con costos mínimos.
