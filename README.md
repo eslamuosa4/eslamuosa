@@ -293,3 +293,35 @@ contract SimpleLottery {
         return players.length;
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Subscription {
+    mapping(address => uint256) public expiration;
+    uint256 public price = 0.01 ether;
+    address public owner;
+
+    event Subscribed(address indexed user, uint256 newExpiration);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function subscribe() external payable {
+        require(msg.value == price, "Incorrect payment");
+        uint256 current = expiration[msg.sender];
+        uint256 start = current > block.timestamp ? current : block.timestamp;
+        expiration[msg.sender] = start + 30 days;
+        emit Subscribed(msg.sender, expiration[msg.sender]);
+    }
+
+    function isActive(address user) external view returns (bool) {
+        return expiration[user] >= block.timestamp;
+    }
+
+    function withdraw() external {
+        require(msg.sender == owner, "Not owner");
+        (bool success, ) = owner.call{value: address(this).balance}("");
+        require(success, "Withdraw failed");
+    }
+}
