@@ -325,3 +325,33 @@ contract Subscription {
         require(success, "Withdraw failed");
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract TimeLock {
+    mapping(address => uint256) public unlockTime;
+    mapping(address => uint256) public lockedAmount;
+
+    event Locked(address indexed user, uint256 amount, uint256 unlockTime);
+    event Withdrawn(address indexed user, uint256 amount);
+
+    function lock(uint256 durationInSeconds) external payable {
+        require(msg.value > 0, "Must send ETH");
+        require(lockedAmount[msg.sender] == 0, "Already locked");
+
+        lockedAmount[msg.sender] = msg.value;
+        unlockTime[msg.sender] = block.timestamp + durationInSeconds;
+        emit Locked(msg.sender, msg.value, unlockTime[msg.sender]);
+    }
+
+    function withdraw() external {
+        require(block.timestamp >= unlockTime[msg.sender], "Still locked");
+        require(lockedAmount[msg.sender] > 0, "Nothing to withdraw");
+
+        uint256 amount = lockedAmount[msg.sender];
+        lockedAmount[msg.sender] = 0;
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Transfer failed");
+        emit Withdrawn(msg.sender, amount);
+    }
+}
