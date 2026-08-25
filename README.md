@@ -386,3 +386,39 @@ contract Allowance {
 
     receive() external payable {}
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract PaymentSplitterLite {
+    address public payee1;
+    address public payee2;
+
+    event PaymentReceived(address indexed from, uint256 amount);
+    event PaymentReleased(address indexed to, uint256 amount);
+
+    constructor(address _payee1, address _payee2) {
+        require(_payee1 != address(0) && _payee2 != address(0), "Invalid address");
+        payee1 = _payee1;
+        payee2 = _payee2;
+    }
+
+    receive() external payable {
+        emit PaymentReceived(msg.sender, msg.value);
+    }
+
+    function release() external {
+        uint256 balance = address(this).balance;
+        require(balance > 0, "Nothing to release");
+
+        uint256 half = balance / 2;
+        uint256 rest = balance - half;
+
+        (bool success1, ) = payee1.call{value: half}("");
+        require(success1, "Transfer to payee1 failed");
+        emit PaymentReleased(payee1, half);
+
+        (bool success2, ) = payee2.call{value: rest}("");
+        require(success2, "Transfer to payee2 failed");
+        emit PaymentReleased(payee2, rest);
+    }
+}
