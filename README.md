@@ -422,3 +422,45 @@ contract PaymentSplitterLite {
         emit PaymentReleased(payee2, rest);
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SimpleAuction {
+    address public highestBidder;
+    uint256 public highestBid;
+    address public owner;
+    bool public ended;
+
+    event BidPlaced(address indexed bidder, uint256 amount);
+    event AuctionEnded(address winner, uint256 amount);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function bid() external payable {
+        require(!ended, "Auction ended");
+        require(msg.value > highestBid, "Bid too low");
+
+        if (highestBidder != address(0)) {
+            (bool success, ) = highestBidder.call{value: highestBid}("");
+            require(success, "Refund failed");
+        }
+
+        highestBidder = msg.sender;
+        highestBid = msg.value;
+        emit BidPlaced(msg.sender, msg.value);
+    }
+
+    function endAuction() external {
+        require(msg.sender == owner, "Not owner");
+        require(!ended, "Already ended");
+        ended = true;
+
+        if (highestBidder != address(0)) {
+            (bool success, ) = owner.call{value: highestBid}("");
+            require(success, "Transfer failed");
+        }
+        emit AuctionEnded(highestBidder, highestBid);
+    }
+}
