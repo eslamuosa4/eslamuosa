@@ -355,3 +355,34 @@ contract TimeLock {
         emit Withdrawn(msg.sender, amount);
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Allowance {
+    address public owner;
+    mapping(address => uint256) public allowance;
+
+    event AllowanceSet(address indexed user, uint256 amount);
+    event Withdrawn(address indexed user, uint256 amount);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function setAllowance(address user, uint256 amount) external {
+        require(msg.sender == owner, "Not owner");
+        allowance[user] = amount;
+        emit AllowanceSet(user, amount);
+    }
+
+    function withdraw(uint256 amount) external {
+        require(allowance[msg.sender] >= amount, "Insufficient allowance");
+        require(address(this).balance >= amount, "Insufficient balance");
+        allowance[msg.sender] -= amount;
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Transfer failed");
+        emit Withdrawn(msg.sender, amount);
+    }
+
+    receive() external payable {}
+}
