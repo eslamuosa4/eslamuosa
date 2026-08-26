@@ -594,3 +594,32 @@ contract EmergencyStop {
         // acción de ejemplo
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SimpleBridge {
+    address public owner;
+    mapping(address => uint256) public locked;
+
+    event Locked(address indexed user, uint256 amount);
+    event Unlocked(address indexed user, uint256 amount);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function lock() external payable {
+        require(msg.value > 0, "Must send ETH");
+        locked[msg.sender] += msg.value;
+        emit Locked(msg.sender, msg.value);
+    }
+
+    function unlock(address user, uint256 amount) external {
+        require(msg.sender == owner, "Not owner");
+        require(locked[user] >= amount, "Insufficient locked");
+        locked[user] -= amount;
+        (bool success, ) = user.call{value: amount}("");
+        require(success, "Transfer failed");
+        emit Unlocked(user, amount);
+    }
+}
