@@ -484,3 +484,48 @@ contract DepositTracker {
         return (totalDeposited[user], depositCount[user]);
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SharedWallet {
+    address public owner;
+    mapping(address => bool) public members;
+
+    event MemberAdded(address indexed member);
+    event MemberRemoved(address indexed member);
+    event Withdrawn(address indexed to, uint256 amount);
+
+    constructor() {
+        owner = msg.sender;
+        members[msg.sender] = true;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
+    modifier onlyMember() {
+        require(members[msg.sender], "Not member");
+        _;
+    }
+
+    function addMember(address member) external onlyOwner {
+        members[member] = true;
+        emit MemberAdded(member);
+    }
+
+    function removeMember(address member) external onlyOwner {
+        members[member] = false;
+        emit MemberRemoved(member);
+    }
+
+    function withdraw(uint256 amount) external onlyMember {
+        require(address(this).balance >= amount, "Insufficient balance");
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Transfer failed");
+        emit Withdrawn(msg.sender, amount);
+    }
+
+    receive() external payable {}
+}
