@@ -464,3 +464,23 @@ contract SimpleAuction {
         emit AuctionEnded(highestBidder, highestBid);
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract DepositTracker {
+    mapping(address => uint256) public totalDeposited;
+    mapping(address => uint256) public depositCount;
+
+    event Deposited(address indexed user, uint256 amount, uint256 total);
+
+    function deposit() external payable {
+        require(msg.value > 0, "Must send ETH");
+        totalDeposited[msg.sender] += msg.value;
+        depositCount[msg.sender] += 1;
+        emit Deposited(msg.sender, msg.value, totalDeposited[msg.sender]);
+    }
+
+    function getInfo(address user) external view returns (uint256 total, uint256 count) {
+        return (totalDeposited[user], depositCount[user]);
+    }
+}
