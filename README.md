@@ -528,4 +528,31 @@ contract SharedWallet {
     }
 
     receive() external payable {}
+}// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract TipJarMulti {
+    address public owner;
+    mapping(address => uint256) public tipsReceived;
+
+    event Tipped(address indexed from, address indexed to, uint256 amount);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function tip(address to) external payable {
+        require(msg.value > 0, "Must send ETH");
+        require(to != address(0), "Invalid address");
+        tipsReceived[to] += msg.value;
+        emit Tipped(msg.sender, to, msg.value);
+    }
+
+    function withdrawTips() external {
+        uint256 amount = tipsReceived[msg.sender];
+        require(amount > 0, "No tips");
+        tipsReceived[msg.sender] = 0;
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Transfer failed");
+    }
 }
