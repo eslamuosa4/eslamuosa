@@ -556,3 +556,41 @@ contract TipJarMulti {
         require(success, "Transfer failed");
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract EmergencyStop {
+    address public owner;
+    bool public stopped;
+
+    event Stopped(address indexed by);
+    event Resumed(address indexed by);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
+    modifier notStopped() {
+        require(!stopped, "Contract is stopped");
+        _;
+    }
+
+    function stop() external onlyOwner {
+        stopped = true;
+        emit Stopped(msg.sender);
+    }
+
+    function resume() external onlyOwner {
+        stopped = false;
+        emit Resumed(msg.sender);
+    }
+
+    function criticalAction() external notStopped {
+        // acción de ejemplo
+    }
+}
