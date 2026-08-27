@@ -715,3 +715,34 @@ contract GasTank {
         emit Used(msg.sender, amount);
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Bounty {
+    address public creator;
+    address public solver;
+    uint256 public reward;
+    bool public claimed;
+    string public description;
+
+    event BountyCreated(address indexed creator, uint256 reward, string description);
+    event BountyClaimed(address indexed solver, uint256 reward);
+
+    constructor(string memory _description) payable {
+        require(msg.value > 0, "Reward required");
+        creator = msg.sender;
+        reward = msg.value;
+        description = _description;
+        emit BountyCreated(msg.sender, msg.value, _description);
+    }
+
+    function claim() external {
+        require(!claimed, "Already claimed");
+        require(msg.sender != creator, "Creator cannot claim");
+        claimed = true;
+        solver = msg.sender;
+        (bool success, ) = msg.sender.call{value: reward}("");
+        require(success, "Transfer failed");
+        emit BountyClaimed(msg.sender, reward);
+    }
+}
