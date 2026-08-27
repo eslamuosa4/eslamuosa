@@ -687,3 +687,31 @@ contract FixedDeposit {
         emit Withdrawn(msg.sender, d.amount);
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract GasTank {
+    mapping(address => uint256) public balance;
+    address public owner;
+
+    event Filled(address indexed user, uint256 amount);
+    event Used(address indexed user, uint256 amount);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function fill() external payable {
+        require(msg.value > 0, "Must send ETH");
+        balance[msg.sender] += msg.value;
+        emit Filled(msg.sender, msg.value);
+    }
+
+    function use(uint256 amount) external {
+        require(balance[msg.sender] >= amount, "Insufficient balance");
+        balance[msg.sender] -= amount;
+        (bool success, ) = owner.call{value: amount}("");
+        require(success, "Transfer failed");
+        emit Used(msg.sender, amount);
+    }
+}
