@@ -746,3 +746,32 @@ contract Bounty {
         emit BountyClaimed(msg.sender, reward);
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Lockbox {
+    address public owner;
+    uint256 public unlockTime;
+    bool public locked = true;
+
+    event Locked(uint256 unlockTime);
+    event Unlocked(address indexed by);
+
+    constructor(uint256 lockDuration) {
+        owner = msg.sender;
+        unlockTime = block.timestamp + lockDuration;
+        emit Locked(unlockTime);
+    }
+
+    function unlock() external {
+        require(msg.sender == owner, "Not owner");
+        require(block.timestamp >= unlockTime, "Still locked");
+        require(locked, "Already unlocked");
+        locked = false;
+        emit Unlocked(msg.sender);
+    }
+
+    function isLocked() external view returns (bool) {
+        return locked && block.timestamp < unlockTime;
+    }
+}
