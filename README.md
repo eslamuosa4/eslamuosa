@@ -623,3 +623,32 @@ contract SimpleBridge {
         emit Unlocked(user, amount);
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Refundable {
+    mapping(address => uint256) public deposits;
+    address public owner;
+
+    event Deposited(address indexed user, uint256 amount);
+    event Refunded(address indexed user, uint256 amount);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function deposit() external payable {
+        require(msg.value > 0, "Must send ETH");
+        deposits[msg.sender] += msg.value;
+        emit Deposited(msg.sender, msg.value);
+    }
+
+    function refund() external {
+        uint256 amount = deposits[msg.sender];
+        require(amount > 0, "Nothing to refund");
+        deposits[msg.sender] = 0;
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Refund failed");
+        emit Refunded(msg.sender, amount);
+    }
+}
