@@ -652,3 +652,38 @@ contract Refundable {
         emit Refunded(msg.sender, amount);
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract FixedDeposit {
+    struct Deposit {
+        uint256 amount;
+        uint256 unlockTime;
+    }
+
+    mapping(address => Deposit) public deposits;
+
+    event Deposited(address indexed user, uint256 amount, uint256 unlockTime);
+    event Withdrawn(address indexed user, uint256 amount);
+
+    function deposit(uint256 lockDays) external payable {
+        require(msg.value > 0, "Must send ETH");
+        require(deposits[msg.sender].amount == 0, "Already has deposit");
+        require(lockDays > 0 && lockDays <= 365, "Invalid days");
+
+        uint256 unlock = block.timestamp + (lockDays * 1 days);
+        deposits[msg.sender] = Deposit(msg.value, unlock);
+        emit Deposited(msg.sender, msg.value, unlock);
+    }
+
+    function withdraw() external {
+        Deposit memory d = deposits[msg.sender];
+        require(d.amount > 0, "No deposit");
+        require(block.timestamp >= d.unlockTime, "Still locked");
+
+        delete deposits[msg.sender];
+        (bool success, ) = msg.sender.call{value: d.amount}("");
+        require(success, "Transfer failed");
+        emit Withdrawn(msg.sender, d.amount);
+    }
+}
