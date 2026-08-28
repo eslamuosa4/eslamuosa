@@ -775,3 +775,40 @@ contract Lockbox {
         return locked && block.timestamp < unlockTime;
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract PiggyBank {
+    address public owner;
+    uint256 public goal;
+    uint256 public totalSaved;
+
+    event Deposited(address indexed from, uint256 amount);
+    event GoalReached(uint256 total);
+    event Withdrawn(uint256 amount);
+
+    constructor(uint256 _goal) {
+        owner = msg.sender;
+        goal = _goal;
+    }
+
+    function deposit() external payable {
+        require(msg.value > 0, "Must send ETH");
+        totalSaved += msg.value;
+        emit Deposited(msg.sender, msg.value);
+
+        if (totalSaved >= goal) {
+            emit GoalReached(totalSaved);
+        }
+    }
+
+    function withdraw() external {
+        require(msg.sender == owner, "Not owner");
+        require(totalSaved >= goal, "Goal not reached");
+        uint256 amount = address(this).balance;
+        totalSaved = 0;
+        (bool success, ) = owner.call{value: amount}("");
+        require(success, "Transfer failed");
+        emit Withdrawn(amount);
+    }
+}
