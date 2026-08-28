@@ -865,3 +865,32 @@ contract Pledge {
         emit Claimed(amount);
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract EthLogger {
+    address public owner;
+
+    event EthReceived(address indexed from, uint256 amount, uint256 timestamp);
+    event EthWithdrawn(address indexed to, uint256 amount);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    receive() external payable {
+        emit EthReceived(msg.sender, msg.value, block.timestamp);
+    }
+
+    function withdraw() external {
+        require(msg.sender == owner, "Not owner");
+        uint256 amount = address(this).balance;
+        (bool success, ) = owner.call{value: amount}("");
+        require(success, "Withdraw failed");
+        emit EthWithdrawn(owner, amount);
+    }
+
+    function getBalance() external view returns (uint256) {
+        return address(this).balance;
+    }
+}
