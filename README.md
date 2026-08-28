@@ -831,3 +831,37 @@ contract SharedCounter {
         return contributions[user];
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Pledge {
+    mapping(address => uint256) public pledges;
+    uint256 public totalPledged;
+    address public beneficiary;
+    bool public claimed;
+
+    event Pledged(address indexed user, uint256 amount);
+    event Claimed(uint256 amount);
+
+    constructor(address _beneficiary) {
+        beneficiary = _beneficiary;
+    }
+
+    function pledge() external payable {
+        require(msg.value > 0, "Must send ETH");
+        require(!claimed, "Already claimed");
+        pledges[msg.sender] += msg.value;
+        totalPledged += msg.value;
+        emit Pledged(msg.sender, msg.value);
+    }
+
+    function claim() external {
+        require(msg.sender == beneficiary, "Not beneficiary");
+        require(!claimed, "Already claimed");
+        claimed = true;
+        uint256 amount = address(this).balance;
+        (bool success, ) = beneficiary.call{value: amount}("");
+        require(success, "Transfer failed");
+        emit Claimed(amount);
+    }
+}
