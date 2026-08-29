@@ -942,3 +942,33 @@ contract Collectible {
         emit Claimed(id, msg.sender);
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract DonationPool {
+    address public owner;
+    uint256 public totalDonations;
+    mapping(address => uint256) public donations;
+
+    event Donated(address indexed donor, uint256 amount);
+    event Withdrawn(uint256 amount);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function donate() external payable {
+        require(msg.value > 0, "Must send ETH");
+        donations[msg.sender] += msg.value;
+        totalDonations += msg.value;
+        emit Donated(msg.sender, msg.value);
+    }
+
+    function withdraw() external {
+        require(msg.sender == owner, "Not owner");
+        uint256 amount = address(this).balance;
+        (bool success, ) = owner.call{value: amount}("");
+        require(success, "Withdraw failed");
+        emit Withdrawn(amount);
+    }
+}
