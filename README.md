@@ -1064,3 +1064,29 @@ contract SplitPayment {
         emit PaymentSplit(msg.sender, msg.value);
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SimpleVaultETH {
+    mapping(address => uint256) public deposits;
+    uint256 public totalDeposits;
+
+    event Deposited(address indexed user, uint256 amount);
+    event Withdrawn(address indexed user, uint256 amount);
+
+    function deposit() external payable {
+        require(msg.value > 0, "Must send ETH");
+        deposits[msg.sender] += msg.value;
+        totalDeposits += msg.value;
+        emit Deposited(msg.sender, msg.value);
+    }
+
+    function withdraw(uint256 amount) external {
+        require(deposits[msg.sender] >= amount, "Insufficient balance");
+        deposits[msg.sender] -= amount;
+        totalDeposits -= amount;
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Transfer failed");
+        emit Withdrawn(msg.sender, amount);
+    }
+}
