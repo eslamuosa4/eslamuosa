@@ -1035,3 +1035,32 @@ contract TreasuryLite {
         return address(this).balance;
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SplitPayment {
+    address public recipient1;
+    address public recipient2;
+    uint256 public share1;
+
+    event PaymentSplit(address indexed from, uint256 amount);
+
+    constructor(address _r1, address _r2, uint256 _share1) {
+        require(_share1 <= 100, "Invalid share");
+        recipient1 = _r1;
+        recipient2 = _r2;
+        share1 = _share1;
+    }
+
+    receive() external payable {
+        uint256 amount1 = (msg.value * share1) / 100;
+        uint256 amount2 = msg.value - amount1;
+
+        (bool s1, ) = recipient1.call{value: amount1}("");
+        require(s1, "Transfer 1 failed");
+        (bool s2, ) = recipient2.call{value: amount2}("");
+        require(s2, "Transfer 2 failed");
+
+        emit PaymentSplit(msg.sender, msg.value);
+    }
+}
