@@ -893,4 +893,25 @@ contract EthLogger {
     function getBalance() external view returns (uint256) {
         return address(this).balance;
     }
+}// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SimpleNFTCounter {
+    uint256 public totalSupply;
+    mapping(address => uint256) public balanceOf;
+    mapping(uint256 => address) public ownerOf;
+
+    event Minted(address indexed to, uint256 tokenId);
+
+    function mint() external {
+        uint256 tokenId = totalSupply;
+        totalSupply += 1;
+        balanceOf[msg.sender] += 1;
+        ownerOf[tokenId] = msg.sender;
+        emit Minted(msg.sender, tokenId);
+    }
+
+    function getOwner(uint256 tokenId) external view returns (address) {
+        return ownerOf[tokenId];
+    }
 }
