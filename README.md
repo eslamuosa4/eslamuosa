@@ -915,3 +915,30 @@ contract SimpleNFTCounter {
         return ownerOf[tokenId];
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Collectible {
+    mapping(address => mapping(uint256 => bool)) public owns;
+    mapping(uint256 => address) public creator;
+    uint256 public nextId = 1;
+
+    event Created(uint256 indexed id, address indexed creator);
+    event Claimed(uint256 indexed id, address indexed claimer);
+
+    function create() external returns (uint256) {
+        uint256 id = nextId;
+        nextId += 1;
+        creator[id] = msg.sender;
+        owns[msg.sender][id] = true;
+        emit Created(id, msg.sender);
+        return id;
+    }
+
+    function claim(uint256 id) external {
+        require(creator[id] != address(0), "Does not exist");
+        require(!owns[msg.sender][id], "Already owns");
+        owns[msg.sender][id] = true;
+        emit Claimed(id, msg.sender);
+    }
+}
