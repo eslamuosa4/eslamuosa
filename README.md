@@ -1090,3 +1090,33 @@ contract SimpleVaultETH {
         emit Withdrawn(msg.sender, amount);
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract FeeWallet {
+    address public owner;
+    uint256 public feePercent = 5;
+    uint256 public collectedFees;
+
+    event PaymentReceived(address indexed from, uint256 amount, uint256 fee);
+    event FeesWithdrawn(uint256 amount);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    receive() external payable {
+        uint256 fee = (msg.value * feePercent) / 100;
+        collectedFees += fee;
+        emit PaymentReceived(msg.sender, msg.value, fee);
+    }
+
+    function withdrawFees() external {
+        require(msg.sender == owner, "Not owner");
+        uint256 amount = collectedFees;
+        collectedFees = 0;
+        (bool success, ) = owner.call{value: amount}("");
+        require(success, "Transfer failed");
+        emit FeesWithdrawn(amount);
+    }
+}
