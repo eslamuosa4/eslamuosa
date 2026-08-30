@@ -1185,3 +1185,32 @@ contract MiniTreasury {
         emit Withdrawn(owner, amount);
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract ETHPool {
+    address public owner;
+    uint256 public totalPool;
+
+    event Deposited(address indexed user, uint256 amount);
+    event Withdrawn(address indexed to, uint256 amount);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function deposit() external payable {
+        require(msg.value > 0, "Must send ETH");
+        totalPool += msg.value;
+        emit Deposited(msg.sender, msg.value);
+    }
+
+    function withdraw(uint256 amount) external {
+        require(msg.sender == owner, "Not owner");
+        require(totalPool >= amount, "Insufficient pool");
+        totalPool -= amount;
+        (bool success, ) = owner.call{value: amount}("");
+        require(success, "Transfer failed");
+        emit Withdrawn(owner, amount);
+    }
+}
