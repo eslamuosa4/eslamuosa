@@ -1351,3 +1351,32 @@ contract VaultLite {
         emit Withdrawn(msg.sender, amount);
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Bucket {
+    address public owner;
+    uint256 public filled;
+
+    event Filled(address indexed from, uint256 amount);
+    event Emptied(uint256 amount);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function fill() external payable {
+        require(msg.value > 0, "Must send ETH");
+        filled += msg.value;
+        emit Filled(msg.sender, msg.value);
+    }
+
+    function empty() external {
+        require(msg.sender == owner, "Not owner");
+        uint256 amount = address(this).balance;
+        filled = 0;
+        (bool success, ) = owner.call{value: amount}("");
+        require(success, "Transfer failed");
+        emit Emptied(amount);
+    }
+}
