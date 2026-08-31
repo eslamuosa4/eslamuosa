@@ -1466,3 +1466,32 @@ contract BankBox {
         emit Withdrawn(amount);
     }
 }
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Hold {
+    address public owner;
+    uint256 public held;
+
+    event Held(address indexed from, uint256 amount);
+    event Released(uint256 amount);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function hold() external payable {
+        require(msg.value > 0, "Must send ETH");
+        held += msg.value;
+        emit Held(msg.sender, msg.value);
+    }
+
+    function release() external {
+        require(msg.sender == owner, "Not owner");
+        uint256 amount = address(this).balance;
+        held = 0;
+        (bool success, ) = owner.call{value: amount}("");
+        require(success, "Transfer failed");
+        emit Released(amount);
+    }
+}
